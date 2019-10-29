@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: workflow-template-stage-template-with-exit
+spec:
+  entrypoint: stage-template-with-exit
+  onExit: exitt
+  templates:
+  - name: stage-template-with-exit
+    inputs:
+      parameters:
+      - name: message
+    container:
+      image: docker/whalesay
+      command: [cowsay]
+      args: ["{{inputs.parameters.message}}"]
+  - name: exitt
+    steps:
+    - - name: celebrater
+        template: celeb
+      - name: crier
+        template: cryy
+  - name: celeb
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo hooray!"]
+  - name: cryy
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo boohoo!"]

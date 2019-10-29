@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: workflow-init-fail-
+spec:
+  entrypoint: flow
+  templates:
+  - name: flow
+    steps:
+    - - name: init-step
+        template: entry-handling
+      - name: A
+        template: stage
+        when: "Init:ContainerCannotRun == false"
+  - name: entry-handling
+    container:
+      image: docker/whalesay:latest
+      command: [sh, -c]
+      args: ["sleep 15; cowsay hello"]
+    initContainers:
+    - name: hello2
+      image: alpine:latest
+      command: ["sleep 60; exit 1"]
+      mirrorVolumeMounts: true
+  - name: stage
+    container:
+      image: docker/whalesay:latest
+      command: [sh, -c]
+      args: ["cowsay step-2"]

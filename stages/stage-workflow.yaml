@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: workflow-template-stage-
+spec:
+  entrypoint: stage
+  onExit: exit-step
+  templates:
+  - name: stage
+    templateRef:
+      name: workflow-template-stage-template-with-exit
+      template: stage-template-with-exit
+    arguments:
+      parameters:
+      - name: message
+        value: "hello world"
+  - name: exit-step
+    steps:
+    - - name: celebrate
+        template: celebrate
+      - name: cry
+        template: cry
+  - name: celebrate
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo hooray!"]
+  - name: cry
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo boohoo!"]

@@ -1,0 +1,67 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: init-exit-container-
+spec:
+  entrypoint: start-point
+  onExit: exit-handler
+  templates:
+  - name: start-point
+    steps:
+    - - name: initi
+        template: init-container-example
+    - - name: fail-step
+        template: intentional-fail
+  - name: init-container-example
+    container:
+      image: alpine:latest
+      command: ["echo", "hello"]
+      volumeMounts:
+      - name: foo
+        mountPath: /foo
+    initContainers:
+    - name: hello
+      image: alpine:latest
+      command: ["echo", "i am always there as init container"]
+      mirrorVolumeMounts: true
+  - name: intentional-fail
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo intentional failure; exit 1"]
+      volumeMounts:
+      - name: foo
+        mountPath: /foo
+    initContainers:
+    - name: hello
+      image: alpine:latest
+      command: ["echo", "Again hello"]
+      mirrorVolumeMounts: true
+  - name: exit-handler
+    steps:
+    - - name: notify
+        template: send-email
+      - name: celebrate
+        template: celebrate
+        when: "{{workflow.status}} == Succeeded"
+      - name: cry
+        template: cry
+        when: "{{workflow.status}} != Succeeded"
+  - name: send-email
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo send e-mail: {{workflow.name}} {{workflow.status}}"]
+  - name: celebrate
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo hooray!"]
+  - name: cry
+    container:
+      image: alpine:latest
+      command: [sh, -c]
+      args: ["echo boohoo!"]
+  volumes:
+    - name: foo
+      emptyDir:

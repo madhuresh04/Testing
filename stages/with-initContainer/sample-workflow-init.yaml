@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: workflow-template-stage-
+spec:
+  entrypoint: flow
+  templates:
+  - name: flow
+    steps:
+    - - name: init-step
+        template: entry-handling
+      - name: function-step
+        template: stage
+    initContainers:
+    - name: hello3
+      image: alpine:latest
+      command: ["echo", "i am here as init container"]
+      mirrorVolumeMounts: true
+  - name: entry-handling
+    templateRef:
+      name: workflow-template-stage-template
+      template: stage-template
+    arguments:
+      parameters:
+      - name: message
+        value: "This is the entry msg"
+  - name: stage
+    templateRef:
+      name: workflow-template-with-init-stage-template
+      template: stage-template-init
+    arguments:
+      parameters:
+      - name: message
+        value: "hello world"
+    initContainers:
+    - name: hello2
+      image: alpine:latest
+      command: ["echo", "i am here as init container"]
+      mirrorVolumeMounts: true

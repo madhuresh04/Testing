@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: workflow-template-with-init-stage-template
+spec:
+  templates:
+  - name: stage-template-init
+    inputs:
+      parameters:
+      - name: message
+    container:
+      image: docker/whalesay
+      command: [cowsay]
+      args: ["{{inputs.parameters.message}}"]
+    initContainers:
+    - name: hello
+      image: alpine:latest
+      command: ["echo", "i am always there as init container"]
+      mirrorVolumeMounts: true

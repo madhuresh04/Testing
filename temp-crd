@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: foo
+spec:
+  entrypoint: bar
+  templates:
+  - include: tmpl1.something
+    name: bar # overwrites name
+    vars: # bind variables to template
+      ver: 9.4
+  - include: tmpl1.foobar
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Template
+metadata:
+  name: tmpl1
+spec:
+   templates:
+  - name: something
+    container:
+      image: debian:{{ver}}
+      command: [sh, -c]
+      args: ["echo debian"]
+  - name: foobar
+    steps:
+    - - include tmpl2.foo
+    - - include tmpl2.bar
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Template
+metadata:
+  name: tmpl2
+spec:
+  templates:
+  - name: foo
+    container:
+      image: ubuntu:16.04
+      command: [sh, -c]
+      args: ["echo foo"]
+  - name: bar
+    container:
+      image: ubuntu:16.04
+      command: [sh, -c]
+      args: ["echo bar"]
